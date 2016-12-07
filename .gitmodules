@@ -1,3 +1,6 @@
 [submodule "whatIsDataGovernance"]
 	path = whatIsDataGovernance
-	url = ./whatIsDataGovernance
+	url = https://github.com/fcps/whatIsDataGovernance
+[submodule "businessRules101"]
+	path = businessRules101
+	url = https://github.com/fcps/businessRules101
