@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Business Rules 101</title>
+
+    <link rel="stylesheet" href="../css/reveal.css">
+    <link rel="stylesheet" href="../css/theme/white.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match( /print-pdf/gi ) ? '../css/print/pdf.css' : '../css/print/paper.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h1>Business Rules 101</h1><br>
+            <h2>Translating People Speak into Computer Speak</h2><br>
+        </section>
+        <section>
+            <h1>Overall Goals</h1>
+            <ul>
+                <li>Build shared understanding of:</li>
+                <ul>
+                    <li>The function and purpose of business rules</li>
+                    <li>The MECE criterion</li>
+                    <li>How to define business rules</li>
+                    <li><strong>Why you should care.</strong></li>
+                </ul>
+            </ul>
+        </section>
+        <section>
+            <h2>The function and purpose of business rules</h2>
+            <section>
+                Business rules = Definitions <small>...but for data</small>
+            </section>
+            <section>
+                Business rules clarify:
+                <ul>
+                    <li>how data are stored</li>
+                    <li>what values are valid</li>
+                    <li>how to compute/derive a value</li>
+                    <li><strong>how we discuss and understand what it is that we are measuring and how we are measuring it</strong></li>
+                </ul>
+                <aside class="notes">
+                    <ul>
+                        <li>how data are stored</li>
+                        <ul>
+                            <li>Are the data numeric, string, bits, boolean, files, etc...</li>
+                        </ul>
+                        <li>what values are valid</li>
+                        <ul>
+                            <li>Can we mark students absent for future dates?</li>
+                        </ul>
+                        <li>How to compute/derive a value</li>
+                        <ul>
+                            <li>Can a student be identified as an English Learner prior to taking any assessments of their language proficiency</li>
+                            <li>What if they have that assessment but do not have a home language survey</li>
+                            <li>Can a student be suspended multiple times for the same incident?</li>
+                        </ul>
+                        <li>how we discuss and understand what it is that we are measuring and how we are measuring it</li>
+                    </ul>
+                </aside>
+            </section>
+            <section>
+                <a href="https://fcps.github.io/whatIsDataGovernance/#/5/1">Data Stewards</a> help <a href="https://fcps.github.io/whatIsDataGovernance/#/5">Data owners</a> monitor and adjust business rules related to regulatory or policy changes
+            </section>
+            <section>
+                <a href="https://fcps.github.io/whatIsDataGovernance/#/5">Data owners</a> approve the business rules for their data.
+            </section>
+            <section>
+                <a href="https://fcps.github.io/whatIsDataGovernance/#/5/2">Data managers</a> ensure the approved business rules are implemented in the data systems
+            </section>
+            <section>
+                Getting a list of enrolled students and their demographic characteristics seems like it should be easy, doesn't it?
+            </section>
+            <section  style="margin-top: 50px">
+						<pre><code data-trim data-noescape>
+-- Selects the data that will be inserted into the table variable
+SELECT DISTINCT b.schid, b.pid, b.schyr, b.sasid, b.firstnm, b.mi, b.lastnm, b.dob, b.schnm,
+	b.sdate, b.edate, b.grade, b.sex, b.race, b.swd, b.ell, b.usentry, b.frl, b.tag,
+	-- Business logic for the gap group
+	CAST(CASE
+	 WHEN b.race IN ('White (Non-Hispanic)', 'Native Hawaiian or Other Pacific Island', 'Asian') AND
+	 b.swd IS NULL AND b.ell IS NULL AND b.frl = 'Full-Price Meals' THEN 0
+	 ELSE 1
+	 END AS BIT) AS gap,
+	b.hhm, b.migrant, b.section504, b.immigrant, b.refugee
+
+-- This is the query where the demographics and all that are selected
+FROM ( SELECT DISTINCT 	'165' + LTRIM(RTRIM(s.number)) AS schid,
+	p.personid AS pid,
+	FCPS_BB.dbo.F_ENDYEAR(y.sdate, DEFAULT) AS schyr,
+	p.stateID AS sasid,
+	i.firstName AS firstnm,
+	SUBSTRING(i.middleName, 1, 1) AS mi,
+	i.lastName AS lastnm,
+	CAST(i.birthdate AS DATE) AS dob,
+	s.name AS schnm,
+	CAST(y.sdate AS DATE) AS sdate,
+	CAST(y.edate AS DATE) AS edate,
+	CAST(e.grade AS TINYINT) AS grade,
+	CAST(CASE
+			WHEN i.gender = 'M' THEN 0
+			WHEN i.gender = 'F' THEN 1
+			ELSE NULL
+	END AS BIT) AS sex,
+	i.raceEthnicityFed AS race,
+	CAST(CASE
+			WHEN (e.specialEdStatus IN ('A', 'AR') OR
+				 (e.specialEdStatus = 'I' AND e.spedExitDate BETWEEN e.startDate AND e.endDate))
+			THEN 1
+			ELSE 0
+	END AS BIT) AS swd,
+	CAST(CASE
+			WHEN l.lepID IS NOT NULL THEN 1
+			ELSE 0
+	END AS BIT) AS ell,
+	CAST(i.dateEnteredUS AS DATE) AS usentry,
+	CASE
+		WHEN pe.frl IS NULL THEN 0
+		ELSE pe.frl
+	END AS frl,
+	CAST(CASE
+			WHEN g.giftedID IS NOT NULL AND g.category = '12' THEN 1
+			WHEN g.giftedID IS NOT NULL THEN 2
+			ELSE 0
+	END AS TINYINT) AS tag,
+	CAST(CASE
+			WHEN e.homeless = 1 THEN 1
+			ELSE 0
+	END AS BIT) AS hhm,
+	CAST(CASE
+			WHEN e.migrant IS NULL THEN 0
+			ELSE e.migrant
+ 	END AS TINYINT) AS migrant,
+	CAST(CASE
+			WHEN e.section504 IS NULL THEN 0
+			ELSE 1
+ 	END AS BIT) AS section504,
+	CAST(CASE
+			WHEN e.immigrant IS NULL THEN 0
+			ELSE 1
+ 	END AS BIT) AS immigrant,
+	CAST(CASE
+			WHEN eky.refugee IS NULL THEN 0
+			ELSE 1
+	END  AS BIT) AS refugee
+
+FROM 		[fayette].[dbo].[Person] p
+INNER JOIN 	[fayette].[dbo].[Identity] i ON i.identityID = p.currentIdentityID
+INNER JOIN 	[fayette].[dbo].[Enrollment] e ON p.personID = e.personID AND ISNULL(e.noShow, 0) = 0 AND
+							ISNULL(e.stateExclude, 0) = 0 AND e.serviceType = 'p'
+INNER JOIN 	[fayette].[dbo].[Calendar] c ON e.calendarID = c.calendarID
+INNER JOIN	[fayette].[dbo].[EnrollmentKY] eky ON e.personID = eky.personID AND c.calendarID = eky.calendarID AND
+											e.enrollmentID = eky.enrollmentID
+--Max Enrollment for School
+INNER JOIN (SELECT 	e.personID, MAX(e.startDate) AS sdate,
+					MAX(NULLIF(e.endDate, @end)) AS edate
+FROM [fayette].[dbo].[Enrollment] e WITH ( NOLOCK )
+WHERE ISNULL(e.noShow, 0) = 0 AND ISNULL(e.stateExclude, 0) = 0 AND e.serviceType = 'p' AND e.startDate <= @end AND
+		ISNULL(e.endDate, @end) >= @start AND e.endYear = FCPS_BB.dbo.F_ENDYEAR(@end, DEFAULT)
+		GROUP BY e.personID) y ON e.personID = y.personID AND e.startDate = y.sdate
+
+INNER JOIN [fayette].[dbo].[School] s ON 	c.schoolID = s.schoolID
+
+--Gets English Language Learner Indicator
+LEFT JOIN [fayette].[dbo].[Lep] l ON p.personID = l.personID AND ((l.programStatus = 'LEP' AND
+						 (l.exitDate > e.startDate OR l.exitDate IS NULL)) OR
+						 (l.programStatus = 'Exited LEP' AND (l.exitDate BETWEEN e.startDate AND
+						 ISNULL(e.endDate, @end) OR l.exitDate > e.endDate)))
+
+--Free/Reduced Price Lunch Indicator
+--Based on conversation w/Jessica Whisman on 05dec2016 the latest status entered into the system
+--should always be returned as record with the current true status.
+LEFT JOIN ( SELECT 	personID,
+		CAST(CASE
+			WHEN eligibility = 'F' THEN 2
+			WHEN eligibility = 'R' THEN 1
+			ELSE 0
+		END AS TINYINT) AS frl,
+		ROW_NUMBER() OVER(PARTITION BY personID ORDER BY startDate DESC) AS recordID
+FROM [fayette].[dbo].[POSEligibility]
+WHERE endYear = dbo.F_ENDYEAR(@end, DEFAULT) AND startDate <= @end AND
+	  NULLIF(endDate, @end) >= @start) AS pe ON pe.personID = p.personID AND pe.recordID = 1
+
+/*FRED at the beginning of the year is very tricky due to files not being loaded
+until after the year starts and not being able to backdate some things - Dana has more
+info. */
+--GT --category 12 is Primary Talent Pool - Decide to include or not depending on need
+LEFT JOIN [fayette].[dbo].[GiftedStatusKY] g 					  ON 	g.personID = p.personID AND
+															g.endDate IS NULL
+
+WHERE 	e.endYear = FCPS_BB.dbo.F_ENDYEAR(@end, DEFAULT) AND
+e.grade IN (00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 14) AND
+e.startDate <= @end AND ISNULL(e.endDate, @end) >= @start
+) AS b;
+						</code></pre>
+            </section>
+            <section>
+                What may be easy for us to comprehend, is not always easy to translate into a series of 1's and 0's so the computer can understand.
+            </section>
+            <section>
+                Business rules help to solve the translation of our thoughts into testable conditions that computers can understand.
+            </section>
+        </section>
+        <section>
+            <h2>The MECE Criterion</h2>
+            <section>
+                <ul>
+                    <li><span style="font-size: 72px;font-weight: bolder">M</span>UTUALLY</li>
+                    <li><span style="font-size: 72px;font-weight: bolder">E</span>XCLUSIVE</li>
+                    <li><span style="font-size: 72px;font-weight: bolder">C</span>OMPLETELY</li>
+                    <li><span style="font-size: 72px;font-weight: bolder">E</span>XHAUSTIVE</li>
+                </ul>
+            </section>
+            <section>
+                Remember the reading from <a href="https://www.amazon.com/Problem-Solving-101-Simple-People/dp/1591842425">Problem Solving 101</a>?
+            </section>
+            <section>
+                The diagrams show how to evaluate the MECE criterion in other contexts (e.g., defining all afterschool activities).
+            </section>
+            <section>
+
+            </section>
+        </section>
+        <section>
+            <h2>How to Define Business Rules</h2>
+            <section>
+                <ul>
+                    <li>Placeholder</li>
+                </ul>
+            </section>
+        </section>
+        <section>
+            <h2>Why you should care</h2>
+            <section>
+                <h1>Efficiency</h1>
+                <aside class="notes">
+                    <ul>
+                        <li>Communicate what you want with greater precision and clarity</li>
+                        <li>Avoid all the annoying emails from DRA asking for clarification</li>
+                    </ul>
+                </aside>
+            </section>
+            <section>
+                <h1>Effectiveness</h1>
+                <aside class="notes">
+                    <ul>
+                        <li>Can translate people speak into computer speak with more ease when the business rules are well defined</li>
+                        <li>Can use data for decision making more effectively when these definitions/rules are known</li>
+                    </ul>
+                </aside>
+            </section>
+            <section>
+                <h1>Consistency</h1>
+                <aside class="notes">
+                    <ul>
+                        <li>Avoid multiple interpretations of your data</li>
+                        <li>Have a single unified definition used universally across the district</li>
+                    </ul>
+                </aside>
+            </section>
+        </section>
+        <section>
+            <h1>For next ELT meeting</h1>
+            <ul>
+                <li>Placeholder</li>
+
+            </ul>
+        </section>
+    </div>
+</div>
+
+<script src="../lib/js/head.min.js"></script>
+<script src="../js/reveal.js"></script>
+
+<script>
+    // More info https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        history: true,
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+            { src: '../plugin/markdown/marked.js' },
+            { src: '../plugin/markdown/markdown.js' },
+            { src: '../plugin/notes/notes.js', async: true },
+            { src: '../plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+        ]
+    });
+</script>
+</body>
+</html>
