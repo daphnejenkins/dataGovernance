@@ -25,13 +25,61 @@
         document.getElementsByTagName( 'head' )[0].appendChild( link );
     </script>
 
+    <!--[if IE]>
+    <style>
+        #frame {
+            zoom: 0.75;
+        }
+    </style>
+    <![endif]-->
+    <style>
+        div.frame {
+            width: 50%;
+            height: 400px;
+            margin: 0 1em 1em 0;
+            border: none;
+            position: relative;
+            -moz-transform: scale(0.75);
+            -moz-transform-origin: 0 0;
+            -o-transform: scale(0.75);
+            -o-transform-origin: 0 0;
+            -webkit-transform: scale(0.75);
+            -webkit-transform-origin: 0 0;
+            overflow: hidden;
+            display: inline-block;
+        }
+        a.frame {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 105%;
+            height: 105%;
+            text-decoration: none;
+            position: absolute;
+            font-size: 24px;
+            font-weight: bolder;
+            z-index: 5;
+        }
+    </style>
+
 </head>
 <body>
-
-    <h1><a href="whatIsDataGovernance/index.html">What is data governance?</a></h1>
-    <h1><a href="businessRules101/index.html">Business Rules 101</a></h1>
-
-
+    <span style="text-align: center">
+        <h1>Fayette County Public Schools</h1><br>
+        <h1>Office of Data, Research, and Accountability</h1><br>
+        <h2>Data Governance</h2><br><br>
+    </span>
+    <div style="margin-left: 1.25%; display: flex;">
+        <div class="frame">
+            <iframe style="width: 100%; height: 100%;" src="whatIsDataGovernance/index.html"></iframe>
+            <a href="whatIsDataGovernance/index.html" class="frame"></a>
+         </div>
+         <div class="frame">
+            <iframe style="width: 100%; height: 100%;" src="businessRules101/index.html"></iframe>
+            <a href="businessRules101/index.html" class="frame"></a>
+        </div>
+    </div>
 </body>
 
 </html>
