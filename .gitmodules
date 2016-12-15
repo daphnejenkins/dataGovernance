@@ -4,3 +4,33 @@
 [submodule "businessRules101"]
 	path = businessRules101
 	url = https://github.com/fcps/businessRules101
+[submodule "definingBusinessRules"]
+	path = definingBusinessRules
+	url = https://github.com/fcps/definingBusinessRules.git
+[submodule "yourDataInventory"]
+	path = yourDataInventory
+	url = https://github.com/fcps/yourDataInventory.git
+[submodule "identifyingYourTeam"]
+	path = identifyingYourTeam
+	url = https://github.com/fcps/identifyingYourTeam.git
+[submodule "qaqcResponsibilities"]
+	path = qaqcResponsibilities
+	url = https://github.com/fcps/qaqcResponsibilities.git
+[submodule "dataGovernanceCommittee"]
+	path = dataGovernanceCommittee
+	url = https://github.com/fcps/dataGovernanceCommittee.git
+[submodule "changeManagement"]
+	path = changeManagement
+	url = https://github.com/fcps/changeManagement.git
+[submodule "changeRequests"]
+	path = changeRequests
+	url = https://github.com/fcps/changeRequests.git
+[submodule "whenThingsDoNotLookRight"]
+	path = whenThingsDoNotLookRight
+	url = https://github.com/fcps/whenThingsDoNotLookRight.git
+[submodule "reviewCycle"]
+	path = reviewCycle
+	url = https://github.com/fcps/reviewCycle.git
+[submodule "managementAndMaintenance"]
+	path = managementAndMaintenance
+	url = https://github.com/fcps/managementAndMaintenance.git
