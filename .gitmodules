@@ -34,3 +34,9 @@
 [submodule "managementAndMaintenance"]
 	path = managementAndMaintenance
 	url = https://github.com/fcps/managementAndMaintenance.git
+[submodule "agileMethodology"]
+	path = agileMethodology
+	url = https://github.com/fcps/agileMethodology.git
+[submodule "altDefinitionsAndRules"]
+	path = altDefinitionsAndRules
+	url = https://github.com/fcps/altDefinitionsAndRules.git
